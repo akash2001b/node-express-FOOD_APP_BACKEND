@@ -32,6 +32,49 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+
+// authentication
+
+function auth(req,res,next){
+  console.log('requrest headers is............')
+  console.log(req.headers);
+  
+  let authHeader=req.headers.authorization;
+  
+  if(!authHeader){
+    console.log('Inseide false function...............111');    
+    console.log('SENDING RESPONONSE BACK');    
+    let err= new Error('you are not authenticated');
+    res.setHeader('WWW-Authenticate','Basic');
+    err.status=401;
+    return next(err);
+  }
+
+  let auth=new Buffer(authHeader.split(' ')[1],'base64').toString().split(':');
+
+  var username=auth[0];
+  var password=auth[1];
+
+  if(username==='admin' && password==='password'){
+
+    console.log('PARTY......................');
+    next();
+  }
+  else{
+    console.log('PARTY. WTIH WORING CREDENTIONAL.....................');
+    let err= new Error('you are not authenticated');
+    res.setHeader('WWW-Authenticate','Basic');
+    err.status=401;
+    return next(err);
+  }
+}
+
+app.use(auth);
+
+// authentication finish
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
