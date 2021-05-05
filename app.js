@@ -31,43 +31,61 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('12345-67890-12345-67890'));
 
 
 // authentication
 
 function auth(req,res,next){
-  console.log('requrest headers is............')
-  console.log(req.headers);
+  console.log('requrest cookies is............')
+  console.log(req.signedCookies);
+
+  if(!req.signedCookies.user){
+
+    let authHeader=req.headers.authorization;
+    
+    if(!authHeader){
+      console.log('Inseide false function...............111');    
+      console.log('SENDING RESPONONSE BACK');    
+      let err= new Error('you are not authenticated');
+      res.setHeader('WWW-Authenticate','Basic');
+      err.status=401;
+      return next(err);
+    }
   
-  let authHeader=req.headers.authorization;
+    let auth=new Buffer.from(authHeader.split(' ')[1],'base64').toString().split(':');
   
-  if(!authHeader){
-    console.log('Inseide false function...............111');    
-    console.log('SENDING RESPONONSE BACK');    
-    let err= new Error('you are not authenticated');
-    res.setHeader('WWW-Authenticate','Basic');
-    err.status=401;
-    return next(err);
-  }
-
-  let auth=new Buffer(authHeader.split(' ')[1],'base64').toString().split(':');
-
-  var username=auth[0];
-  var password=auth[1];
-
-  if(username==='admin' && password==='password'){
-
-    console.log('PARTY......................');
-    next();
+    var username=auth[0];
+    var password=auth[1];
+  
+    if(username==='admin' && password==='password'){
+      res.cookie('user','admin',{ signed: true} );  //setup cookie
+      res.cookie('nxxx','gunner',{ signed: true} );  //setup cookie
+      console.log('PARTY......................');
+      next();
+    }
+    else{
+      console.log('PARTY. WTIH WORING CREDENTIONAL.....................');
+      let err= new Error('you are not authenticated');
+      res.setHeader('WWW-Authenticate','Basic');
+      err.status=401;
+      return next(err);
+    }    
+    
   }
   else{
-    console.log('PARTY. WTIH WORING CREDENTIONAL.....................');
-    let err= new Error('you are not authenticated');
-    res.setHeader('WWW-Authenticate','Basic');
-    err.status=401;
-    return next(err);
+    if(req.signedCookies.user==='admin'){
+      next();
+    }
+    else{            
+      let err= new Error('you are not authenticated');
+      res.setHeader('WWW-Authenticate','Basic');
+      err.status=401;
+      return next(err);
+    }
+
   }
+  
 }
 
 app.use(auth);
