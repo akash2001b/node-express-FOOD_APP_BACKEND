@@ -3,12 +3,15 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const session=require('express-session');
+const FileStore=require('session-file-store')(session);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const dishRouter=require('./routes/dishRouter');
 const promoRouter=require('./routes/promoRouter');
 const leaderRouter=require('./routes/leaderRouter');
+
 
 const mongoose=require('mongoose');
 const Dishes=require('./models/dishes');
@@ -31,16 +34,23 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser('12345-67890-12345-67890'));
+// app.use(cookieParser('12345-67890-12345-67890'));
+app.use(session({
+  name:'session-id',
+  secret:'12345-67890-12345-67890',
+  saveUninitialized:false,
+  resave:false,
+  store:new FileStore()
+}));
 
 
 // authentication
 
 function auth(req,res,next){
-  console.log('requrest cookies is............')
-  console.log(req.signedCookies);
+  console.log('session details are............')
+  console.log(req.session);
 
-  if(!req.signedCookies.user){
+  if(!req.session.user){
 
     let authHeader=req.headers.authorization;
     
@@ -59,8 +69,7 @@ function auth(req,res,next){
     var password=auth[1];
   
     if(username==='admin' && password==='password'){
-      res.cookie('user','admin',{ signed: true} );  //setup cookie
-      res.cookie('nxxx','gunner',{ signed: true} );  //setup cookie
+      req.session.user='admin';  //setup cookie
       console.log('PARTY......................');
       next();
     }
@@ -74,7 +83,7 @@ function auth(req,res,next){
     
   }
   else{
-    if(req.signedCookies.user==='admin'){
+    if(req.session.user==='admin'){
       next();
     }
     else{            
