@@ -6,7 +6,9 @@ var logger = require('morgan');
 const session=require('express-session');
 const FileStore=require('session-file-store')(session);
 let passport=require('passport');
-let authenticate=require('./authenticate')
+let authenticate=require('./authenticate');
+let config=require('./config');
+
 
 // cors
 const cors=require('cors');
@@ -21,7 +23,7 @@ const leaderRouter=require('./routes/leaderRouter');
 const mongoose=require('mongoose');
 const Dishes=require('./models/dishes');
 
-const url='mongodb://localhost:27017/conFusion';
+const url=config.mongoUrl;
 
 const connect=mongoose.connect(url);
 
@@ -41,55 +43,24 @@ app.use(cors());  //cors for cross origin;
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-// app.use(cookieParser('12345-67890-12345-67890'));
-
-app.use(session({
-  name:'session-id',
-  secret:'12345-67890-12345-67890',
-  saveUninitialized:false,
-  resave:false,
-  store:new FileStore()
-}));
 
 
 app.use(passport.initialize());
-app.use(passport.session());
-
-// app.use(function(req, res, next) {
-//     console.log('STARTING 123..........................');
-//     next();
-// });
-// testing
 
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-
-// authentication
-function auth(req,res,next){
-
-  if(!req.user){      
-      let err= new Error('you are not authenticated');
-      err.status=401;
-      return next(err);   
-  }  
-  else{  
-    next();
-  }
-}
-
-app.use(auth);
-
-// authentication finish
-
-
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
+
+
+
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
