@@ -4,6 +4,7 @@ const User=require('../models/user');
 var router = express.Router();
 const passport=require('passport');
 let authenticate=require('../authenticate');
+const { urlencoded } = require('express');
 
 
 router.use(bodyParser.json());
@@ -25,11 +26,23 @@ router.post('/signup',(req,res,next)=>{
       res.json({err:err});
       // error  user exits
     }
-    else{      
-      passport.authenticate('local')(req,res, ()=> {              
-        res.statusCode=200;
+    else{
+      if(req.body.firstname)  //add firstname and lastname to user
+        user.firstname=req.body.firstname;      
+      if(req.body.lastname)
+        user.lastname=req.body.lastname;    
+
+      user.save()
+      .then( (user) =>{
+        passport.authenticate('local')(req,res, ()=> {              
+          res.statusCode=200;
+          res.setHeader('Content-Type','application/json');
+          res.json({ success:true, status:'Registration Successful!'});
+        });
+      }, (err) => {
+        res.statusCode=500;
         res.setHeader('Content-Type','application/json');
-        res.json({ success:true, status:'Registration Successful!'});
+        res.json({err:err});
       });
     }
   });
