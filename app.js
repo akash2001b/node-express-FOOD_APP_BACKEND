@@ -35,6 +35,7 @@ connect.then((db) =>{
 
 var app = express();
 
+// app.use(cors());  //cors for cross origin;
 
 // redirect to secure server
 app.all('*',(req, res, next)=>{
@@ -50,7 +51,6 @@ app.all('*',(req, res, next)=>{
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-app.use(cors());  //cors for cross origin;
 
 app.use(logger('dev'));
 app.use(express.json());
