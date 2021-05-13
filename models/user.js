@@ -8,6 +8,7 @@ var User = new Schema({
         type:String,
         default:''
     },
+    facebookId: String,
     lastname:{
         type:String,
         default:''
